@@ -2,7 +2,8 @@
 <androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    xmlns:app="http://schemas.android.com/apk/res-auto">
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools">
 
     <androidx.cardview.widget.CardView
         app:layout_constraintStart_toStartOf="parent"
@@ -12,7 +13,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content">
 
-        <LinearLayout
+        <FrameLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="horizontal"
@@ -20,18 +21,21 @@
 
         <TextView
             android:id="@+id/text_item"
+            android:textSize="46sp"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Item Name"
-            android:layout_weight="1"/>
+            tools:text="Item Name"
+            />
 
-            <CheckBox
+            <com.google.android.material.checkbox.MaterialCheckBox
                 android:id="@+id/checkbox"
-                android:layout_width="match_parent"
+                android:layout_marginEnd="20dp"
+                android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_weight="2"
+                android:layout_gravity="end|center"
                 android:buttonTint="@color/colorPrimary"
                 android:gravity="center" />
-        </LinearLayout>
+
+        </FrameLayout>
     </androidx.cardview.widget.CardView>
 </androidx.constraintlayout.widget.ConstraintLayout>
