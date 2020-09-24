@@ -1,33 +1,35 @@
-package com.example.airtel.checkbox.adapter
+package com.example.checkboxstateinrecycler.adapter
 
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.TextView
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import com.example.checkboxstateinrecycler.R
 import kotlinx.android.synthetic.main.list_items.view.*
 
+
 class ListTextAdapter private constructor(
     private val diffUtil: DiffUtil.ItemCallback<ListItem>,
-    private val onItemClick: (Int, Boolean, Boolean) -> Unit
-) : ListAdapter<ListItem, TextItemVH>(diffUtil){
+    private val onItemClick: (/*currentPosition*/Int,/*previousState*/ Boolean,/*updatedState*/ Boolean) -> Unit
+) : ListAdapter<ListItem, TextItemVH>(diffUtil) {
 
     companion object {
 
         private val DIFF_CALLBACK = object : DiffUtil.ItemCallback<ListItem>() {
 
             override fun areItemsTheSame(oldItem: ListItem, newItem: ListItem): Boolean =
-                oldItem.checkboxTextValue == newItem.checkboxTextValue
+                oldItem.itemId == newItem.itemId
 
             override fun areContentsTheSame(oldItem: ListItem, newItem: ListItem): Boolean =
                 oldItem == newItem
 
         }
 
-        fun newInstance(onItemClick : (Int, Boolean, Boolean) -> Unit) = ListTextAdapter(
+        fun newInstance(onItemClick: (Int, Boolean, Boolean) -> Unit) = ListTextAdapter(
             DIFF_CALLBACK, onItemClick
         )
     }
@@ -44,38 +46,46 @@ class ListTextAdapter private constructor(
     }
 
     override fun onBindViewHolder(holder: TextItemVH, position: Int) {
-
         holder.bind(requireNotNull(getItemAt(position)), onItemClick)
     }
 }
 
-class TextItemVH(view : View) : RecyclerView.ViewHolder(view){
-
-    val text_movie_item = view.text_item
-    val item_checkbox = view.checkbox
+class TextItemVH(private val view: View) : RecyclerView.ViewHolder(view) {
 
     fun bind(
         textListItem: ListItem,
         onItemClick: (Int, Boolean, Boolean) -> Unit
-    ){
+    ) {
 
         //ListView automatically calls onCheckedChanged when scrolling
         //Set the state change listener event to null before initializing the
         //CheckBox state and setting the state change listener event
-        item_checkbox.setOnCheckedChangeListener(null)
-        text_movie_item.setText(textListItem.checkboxTextValue)
+        with(view){
+            checkbox.setOnCheckedChangeListener(null)
+            text_item.text = textListItem.checkboxTextValue
+            checkbox.isChecked = textListItem.setCheckboxCurrentState
 
-        item_checkbox.isChecked = textListItem.setCheckboxCurrentState
+            //now set the state change listener event
+            checkbox.setOnCheckedChangeListener { _, isChecked ->
+                Log.e("checkbox","called $isChecked at pos: $adapterPosition")
+                textListItem.setCheckboxCurrentState = isChecked
 
-        //now set the state change listener event
-        item_checkbox.setOnCheckedChangeListener{buttonView, isChecked ->
-
-            textListItem.setCheckboxCurrentState = isChecked
-
-            onItemClick.invoke(adapterPosition, textListItem.setCheckboxCurrentState, textListItem.setCheckboxPreviousState)
+                onItemClick.invoke(
+                    adapterPosition,
+                    textListItem.setCheckboxCurrentState,
+                    textListItem.setCheckboxPreviousState
+                )
+            }
         }
+
+
 
     }
 }
 
-data class ListItem(val checkboxTextValue: String, val setCheckboxPreviousState: Boolean, var setCheckboxCurrentState: Boolean = setCheckboxPreviousState)
+data class ListItem(
+    val itemId: Int = (0..100).random(),
+    val checkboxTextValue: String,
+    val setCheckboxPreviousState: Boolean,
+    var setCheckboxCurrentState: Boolean = setCheckboxPreviousState
+)
