@@ -3,6 +3,7 @@ package com.example.checkboxstateinrecycler
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.util.Log
+import com.example.checkboxstateinrecycler.adapter.ListAdapterInteractor
 import com.example.checkboxstateinrecycler.adapter.ListItem
 import com.example.checkboxstateinrecycler.adapter.ListTextAdapter
 import kotlinx.android.synthetic.main.activity_main.*
@@ -16,25 +17,27 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
-        val onItemClick = { pos: Int, currentValue: Boolean, updatedValue: Boolean ->
+        val listAdapterInteractor: ListAdapterInteractor = object : ListAdapterInteractor {
+            override fun onItemClick(position: Int, previousValue: Boolean, userValue: Boolean) {
+                val item = listAdapter.getItemAt(position)
 
-            val item = listAdapter.getItemAt(pos)
-
-            //compare the current and previous state of checkbox
-            if (currentValue != updatedValue) {
-                //the state is changed then add it to the list
-                item?.let { mockList.add(it) }
-            } else {
-                //remove the item if the item is back to its previous state
-                if (mockList.contains(item)) {
-                    mockList.remove(item)
+                //compare the current and previous state of checkbox
+                if (previousValue != userValue) {
+                    //the state is changed then add it to the list
+                    item?.let { mockList.add(it) }
+                } else {
+                    //remove the item if the item is back to its previous state
+                    if (mockList.contains(item)) {
+                        mockList.remove(item)
+                    }
                 }
-            }
 
-            if (item != null) Log.d("Result list", "Checked value = $item")
+                if (item != null) Log.d("Result list", "Checked value = $item")
+            }
         }
 
-        list_items.adapter = ListTextAdapter.newInstance(onItemClick)
+
+        list_items.adapter = ListTextAdapter.newInstance(listAdapterInteractor)
             .also {
                 listAdapter = it
             }

@@ -1,10 +1,8 @@
 package com.example.checkboxstateinrecycler.adapter
 
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.TextView
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
@@ -14,7 +12,7 @@ import kotlinx.android.synthetic.main.list_items.view.*
 
 class ListTextAdapter private constructor(
     private val diffUtil: DiffUtil.ItemCallback<ListItem>,
-    private val onItemClick: (/*currentPosition*/Int,/*previousState*/ Boolean,/*updatedState*/ Boolean) -> Unit
+    private val listAdapterInteractor: ListAdapterInteractor
 ) : ListAdapter<ListItem, TextItemVH>(diffUtil) {
 
     companion object {
@@ -29,8 +27,8 @@ class ListTextAdapter private constructor(
 
         }
 
-        fun newInstance(onItemClick: (Int, Boolean, Boolean) -> Unit) = ListTextAdapter(
-            DIFF_CALLBACK, onItemClick
+        fun newInstance(listAdapterInteractor: ListAdapterInteractor) = ListTextAdapter(
+            DIFF_CALLBACK, listAdapterInteractor
         )
     }
 
@@ -46,36 +44,40 @@ class ListTextAdapter private constructor(
     }
 
     override fun onBindViewHolder(holder: TextItemVH, position: Int) {
-        holder.bind(requireNotNull(getItemAt(position)), onItemClick)
+        holder.bind(requireNotNull(getItemAt(position)), listAdapterInteractor)
     }
 }
 
-class TextItemVH(private val view: View) : RecyclerView.ViewHolder(view) {
+class TextItemVH(view: View) : BaseViewHolder<ListItem, ListAdapterInteractor>(view) {
 
-    fun bind(
-        textListItem: ListItem,
-        onItemClick: (Int, Boolean, Boolean) -> Unit
-    ) {
-
-        //ListView automatically calls onCheckedChanged when scrolling
-        //Set the state change listener event to null before initializing the
-        //CheckBox state and setting the state change listener event
-        with(view) {
+    override fun onResetViewState(holder: BaseViewHolder<ListItem, ListAdapterInteractor>) {
+        with(holder.view) {
+            //always remove listener first then reset view to default
             checkbox.setOnCheckedChangeListener(null)
-            text_item.text = textListItem.checkboxTextValue
-            checkbox.isChecked = textListItem.setCheckboxCurrentState
+            text_item.text = ""
+            checkbox.isChecked = false
+        }
+    }
 
+    override fun onInitializingViewState(
+        holder: BaseViewHolder<ListItem, ListAdapterInteractor>,
+        data: ListItem,
+        callback: ListAdapterInteractor
+    ) {
+        with(holder.view) {
+            //always set data first then listener
+            text_item.text = data.checkboxTextValue
+            checkbox.isChecked = data.setCheckboxCurrentState
             //now set the state change listener event
             checkbox.setOnCheckedChangeListener { _, isChecked ->
-                textListItem.setCheckboxCurrentState = !textListItem.setCheckboxCurrentState
-                onItemClick.invoke(
+                data.setCheckboxCurrentState = !data.setCheckboxCurrentState
+                callback.onItemClick(
                     adapterPosition,
-                    textListItem.setCheckboxCurrentState,
-                    textListItem.setCheckboxPreviousState
+                    data.setCheckboxCurrentState,
+                    data.setCheckboxPreviousState
                 )
             }
         }
-
     }
 }
 
@@ -85,3 +87,27 @@ data class ListItem(
     val setCheckboxPreviousState: Boolean,
     var setCheckboxCurrentState: Boolean = setCheckboxPreviousState
 )
+
+abstract class BaseViewHolder<D, I : ViewHolderInteractor>(val view: View) :
+    RecyclerView.ViewHolder(view) {
+    abstract fun onResetViewState(baseViewHolder: BaseViewHolder<D, I>)
+    abstract fun onInitializingViewState(
+        baseViewHolder: BaseViewHolder<D, I>,
+        data: D,
+        callback: I
+    )
+
+    fun bind(
+        data: D,
+        callback: I
+    ) {
+        onResetViewState(this)
+        onInitializingViewState(this, data, callback)
+    }
+}
+
+interface ViewHolderInteractor {}
+
+interface ListAdapterInteractor : ViewHolderInteractor {
+    fun onItemClick(position: Int, previousValue: Boolean, userValue: Boolean)
+}
