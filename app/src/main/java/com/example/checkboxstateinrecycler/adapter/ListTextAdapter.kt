@@ -65,10 +65,8 @@ class TextItemVH(private val view: View) : RecyclerView.ViewHolder(view) {
             checkbox.isChecked = textListItem.setCheckboxCurrentState
 
             //now set the state change listener event
-            checkbox.setOnCheckedChangeListener { _, isChecked ->
-                Log.e("checkbox","called $isChecked at pos: $adapterPosition")
-                textListItem.setCheckboxCurrentState = isChecked
-
+            checkbox.setOnClickListener {
+                textListItem.setCheckboxCurrentState = !textListItem.setCheckboxCurrentState
                 onItemClick.invoke(
                     adapterPosition,
                     textListItem.setCheckboxCurrentState,
