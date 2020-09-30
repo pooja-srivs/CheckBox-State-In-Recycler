@@ -50,37 +50,41 @@ class ListTextAdapter private constructor(
     }
 }
 
-class TextItemVH(private val view: View) : RecyclerView.ViewHolder(view) {
+class TextItemVH(view: View) : RecyclerView.ViewHolder(view) {
+
+    var data: ListItem? = null
+    var onItemClick: (Int, Boolean, Boolean) -> Unit = { pos, lastvalue, currentvalue -> }
+
+    init {
+        with(view) {
+            //you need to attach listener once globally
+            //At runtime global reference will change due to onBind and you will have right data
+            // this approach isn't recommended as it holds listener of pervious states of ViewHolder
+            // even thou the data is getting refereshed it can cause leaks in memory as reference
+            // of view is never released
+            checkbox.setOnCheckedChangeListener { _, isChecked ->
+                data?.setCheckboxCurrentState = isChecked
+                onItemClick.invoke(
+                    adapterPosition,
+                    data?.setCheckboxCurrentState ?: false,
+                    data?.setCheckboxPreviousState ?: false
+                )
+            }
+        }
+    }
 
     fun bind(
         textListItem: ListItem,
         onItemClick: (Int, Boolean, Boolean) -> Unit
     ) {
-
-        //ListView automatically calls onCheckedChanged when scrolling
-        //Set the state change listener event to null before initializing the
-        //CheckBox state and setting the state change listener event
-        with(view){
-            checkbox.setOnCheckedChangeListener(null)
+        this.data = textListItem
+        this.onItemClick = onItemClick
+        with(itemView) {
             text_item.text = textListItem.checkboxTextValue
             checkbox.isChecked = textListItem.setCheckboxCurrentState
-
-            //now set the state change listener event
-            checkbox.setOnCheckedChangeListener { _, isChecked ->
-                Log.e("checkbox","called $isChecked at pos: $adapterPosition")
-                textListItem.setCheckboxCurrentState = isChecked
-
-                onItemClick.invoke(
-                    adapterPosition,
-                    textListItem.setCheckboxCurrentState,
-                    textListItem.setCheckboxPreviousState
-                )
-            }
         }
-
-
-
     }
+
 }
 
 data class ListItem(
