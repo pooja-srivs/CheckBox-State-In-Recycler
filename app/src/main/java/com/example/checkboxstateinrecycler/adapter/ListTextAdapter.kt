@@ -60,16 +60,14 @@ class TextItemVH(private val view: View) : RecyclerView.ViewHolder(view) {
         //ListView automatically calls onCheckedChanged when scrolling
         //Set the state change listener event to null before initializing the
         //CheckBox state and setting the state change listener event
-        with(view){
+        with(view) {
             checkbox.setOnCheckedChangeListener(null)
             text_item.text = textListItem.checkboxTextValue
             checkbox.isChecked = textListItem.setCheckboxCurrentState
 
             //now set the state change listener event
             checkbox.setOnCheckedChangeListener { _, isChecked ->
-                Log.e("checkbox","called $isChecked at pos: $adapterPosition")
-                textListItem.setCheckboxCurrentState = isChecked
-
+                textListItem.setCheckboxCurrentState = !textListItem.setCheckboxCurrentState
                 onItemClick.invoke(
                     adapterPosition,
                     textListItem.setCheckboxCurrentState,
@@ -77,8 +75,6 @@ class TextItemVH(private val view: View) : RecyclerView.ViewHolder(view) {
                 )
             }
         }
-
-
 
     }
 }
