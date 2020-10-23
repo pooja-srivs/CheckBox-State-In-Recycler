@@ -49,8 +49,8 @@ class ListTextAdapter private constructor(
         holder.bind(requireNotNull(getItemAt(position)), onItemClick)
     }
 
-    override fun onViewRecycled(holder: TextItemVH) {
-        super.onViewRecycled(holder)
+    override fun onViewDetachedFromWindow(holder: TextItemVH) {
+        super.onViewDetachedFromWindow(holder)
         holder.unBind()
     }
 }
